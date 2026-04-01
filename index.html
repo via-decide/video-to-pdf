@@ -1,0 +1,890 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Daxini Lens — Video → PDF Guide</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=Inconsolata:wght@400;500;600&family=DM+Serif+Display:ital@0;1&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --bg:     #080a0d;
+      --panel:  #0f1318;
+      --panel2: #131820;
+      --text:   #e4ecf7;
+      --muted:  #7a8ba0;
+      --line:   #1e2a38;
+      --acc:    #38bdf8;
+      --acc2:   #f97316;
+      --acc3:   #4ade80;
+      --danger: #ef4444;
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Syne', sans-serif;
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+
+    /* ── Noise grain overlay ── */
+    body::before {
+      content: '';
+      position: fixed; inset: 0;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E");
+      pointer-events: none; z-index: 0; opacity: 0.5;
+    }
+
+    /* ── Header ── */
+    header {
+      position: sticky; top: 0; z-index: 100;
+      padding: 0 24px;
+      height: 52px;
+      display: flex; align-items: center; justify-content: space-between;
+      background: rgba(8,10,13,0.88);
+      backdrop-filter: blur(12px);
+      border-bottom: 1px solid var(--line);
+    }
+    .logo {
+      display: flex; align-items: center; gap: 10px;
+    }
+    .logo-mark {
+      width: 28px; height: 28px; border-radius: 6px;
+      background: linear-gradient(135deg, var(--acc), var(--acc2));
+      display: flex; align-items: center; justify-content: center;
+      font-size: 13px; font-weight: 800; color: #000;
+    }
+    .logo-text {
+      font-size: 13px; font-weight: 700; letter-spacing: 0.3px;
+    }
+    .logo-sub {
+      font-family: 'Inconsolata', monospace;
+      font-size: 11px; color: var(--muted);
+      border: 1px solid var(--line);
+      padding: 2px 8px; border-radius: 4px;
+    }
+    .header-right {
+      font-family: 'Inconsolata', monospace;
+      font-size: 11px; color: var(--muted);
+    }
+
+    /* ── Main layout ── */
+    main {
+      position: relative; z-index: 1;
+      max-width: 860px;
+      margin: 0 auto;
+      padding: 32px 20px 80px;
+    }
+
+    /* ── Hero ── */
+    .hero {
+      text-align: center;
+      padding: 48px 0 40px;
+      animation: fadeUp 0.6s ease both;
+    }
+    .hero-eyebrow {
+      font-family: 'Inconsolata', monospace;
+      font-size: 11px; color: var(--acc);
+      letter-spacing: 2px; text-transform: uppercase;
+      margin-bottom: 16px;
+    }
+    .hero h1 {
+      font-family: 'DM Serif Display', serif;
+      font-size: clamp(32px, 6vw, 52px);
+      line-height: 1.1;
+      letter-spacing: -1px;
+      margin-bottom: 14px;
+    }
+    .hero h1 em { font-style: italic; color: var(--acc); }
+    .hero p {
+      font-size: 15px; color: var(--muted);
+      max-width: 480px; margin: 0 auto;
+      line-height: 1.65;
+    }
+
+    /* ── Cards ── */
+    .card {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 16px;
+      padding: 20px;
+      margin-bottom: 14px;
+      animation: fadeUp 0.5s ease both;
+    }
+    .card-title {
+      font-family: 'Inconsolata', monospace;
+      font-size: 11px; font-weight: 600;
+      color: var(--muted); letter-spacing: 1.5px;
+      text-transform: uppercase;
+      margin-bottom: 14px;
+      display: flex; align-items: center; gap: 8px;
+    }
+    .card-title::after {
+      content: ''; flex: 1;
+      height: 1px; background: var(--line);
+    }
+
+    /* ── Key input ── */
+    .key-row {
+      display: flex; gap: 8px;
+    }
+    .key-row input {
+      flex: 1;
+    }
+    input, textarea, select {
+      background: var(--panel2);
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      color: var(--text);
+      font-family: 'Inconsolata', monospace;
+      font-size: 13px;
+      padding: 10px 14px;
+      outline: none;
+      width: 100%;
+      transition: border-color 0.15s;
+    }
+    input:focus, textarea:focus, select:focus {
+      border-color: #2a4a6a;
+    }
+    input::placeholder { color: var(--muted); }
+
+    /* ── Drop zone ── */
+    .drop-zone {
+      border: 1.5px dashed var(--line);
+      border-radius: 14px;
+      padding: 40px 20px;
+      text-align: center;
+      cursor: pointer;
+      transition: border-color 0.2s, background 0.2s;
+      position: relative;
+      overflow: hidden;
+    }
+    .drop-zone:hover, .drop-zone.over {
+      border-color: var(--acc);
+      background: rgba(56,189,248,0.04);
+    }
+    .drop-zone input[type="file"] {
+      position: absolute; inset: 0;
+      opacity: 0; cursor: pointer;
+      width: 100%; height: 100%;
+      border: none; background: none; padding: 0;
+    }
+    .drop-icon {
+      font-size: 36px; margin-bottom: 12px;
+    }
+    .drop-label {
+      font-size: 14px; font-weight: 600;
+      margin-bottom: 6px;
+    }
+    .drop-sub {
+      font-size: 12px; color: var(--muted);
+      font-family: 'Inconsolata', monospace;
+    }
+    .drop-selected {
+      margin-top: 12px;
+      font-family: 'Inconsolata', monospace;
+      font-size: 12px;
+      color: var(--acc3);
+      background: rgba(74,222,128,0.08);
+      border: 1px solid rgba(74,222,128,0.2);
+      border-radius: 8px;
+      padding: 8px 14px;
+      display: none;
+    }
+
+    /* ── Options row ── */
+    .options-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+    }
+    @media(max-width:600px){ .options-grid{ grid-template-columns:1fr; } }
+    label.field-label {
+      display: block;
+      font-size: 11px; color: var(--muted);
+      font-family: 'Inconsolata', monospace;
+      letter-spacing: 0.5px;
+      margin-bottom: 6px;
+    }
+
+    /* ── Buttons ── */
+    .btn {
+      border: 1px solid var(--line);
+      background: var(--panel2);
+      color: var(--text);
+      padding: 10px 16px;
+      border-radius: 10px;
+      cursor: pointer;
+      font-family: 'Syne', sans-serif;
+      font-weight: 600;
+      font-size: 13px;
+      transition: border-color 0.15s, background 0.15s;
+      display: inline-flex; align-items: center; gap: 6px;
+    }
+    .btn:hover { border-color: #2a4a6a; }
+    .btn.primary {
+      border-color: rgba(56,189,248,0.4);
+      background: linear-gradient(160deg, rgba(56,189,248,0.12), rgba(56,189,248,0.04));
+      color: var(--acc);
+    }
+    .btn.primary:hover { background: rgba(56,189,248,0.16); }
+    .btn.primary:disabled {
+      opacity: 0.4; cursor: not-allowed;
+    }
+    .btn.success {
+      border-color: rgba(74,222,128,0.4);
+      background: rgba(74,222,128,0.08);
+      color: var(--acc3);
+    }
+    .btn.danger-btn {
+      border-color: rgba(239,68,68,0.3);
+      color: var(--danger);
+    }
+    .btn-row {
+      display: flex; gap: 8px; flex-wrap: wrap;
+      margin-top: 14px;
+    }
+
+    /* ── Progress ── */
+    .progress-wrap {
+      display: none;
+      margin-top: 14px;
+    }
+    .progress-steps {
+      display: flex; flex-direction: column; gap: 6px;
+    }
+    .step-item {
+      display: flex; align-items: center; gap: 10px;
+      font-family: 'Inconsolata', monospace;
+      font-size: 12px; color: var(--muted);
+      padding: 8px 12px;
+      border-radius: 8px;
+      border: 1px solid transparent;
+      transition: all 0.3s;
+    }
+    .step-item.active {
+      color: var(--acc);
+      border-color: rgba(56,189,248,0.2);
+      background: rgba(56,189,248,0.06);
+    }
+    .step-item.done {
+      color: var(--acc3);
+      border-color: rgba(74,222,128,0.15);
+      background: rgba(74,222,128,0.04);
+    }
+    .step-item.error {
+      color: var(--danger);
+      border-color: rgba(239,68,68,0.2);
+      background: rgba(239,68,68,0.04);
+    }
+    .step-dot {
+      width: 8px; height: 8px; border-radius: 50%;
+      background: currentColor; flex-shrink: 0;
+    }
+    .step-item.active .step-dot {
+      animation: pulse 1s ease infinite;
+    }
+
+    /* ── Output preview ── */
+    .output-wrap {
+      display: none;
+    }
+    .pdf-preview {
+      background: var(--panel2);
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      padding: 24px;
+      font-size: 13px;
+      line-height: 1.7;
+      max-height: 500px;
+      overflow-y: auto;
+    }
+    .pdf-preview h2 {
+      font-family: 'DM Serif Display', serif;
+      font-size: 22px; margin-bottom: 6px;
+    }
+    .pdf-preview .meta {
+      font-family: 'Inconsolata', monospace;
+      font-size: 11px; color: var(--muted);
+      margin-bottom: 20px;
+      padding-bottom: 14px;
+      border-bottom: 1px solid var(--line);
+    }
+    .pdf-preview .summary-block {
+      background: rgba(56,189,248,0.06);
+      border-left: 3px solid var(--acc);
+      border-radius: 0 8px 8px 0;
+      padding: 12px 16px;
+      margin-bottom: 20px;
+      font-size: 13px;
+      color: #c5d8eb;
+    }
+    .pdf-preview .step-block {
+      display: flex; gap: 14px;
+      margin-bottom: 16px;
+      padding-bottom: 16px;
+      border-bottom: 1px solid var(--line);
+    }
+    .pdf-preview .step-block:last-child { border-bottom: none; }
+    .step-num {
+      width: 28px; height: 28px; border-radius: 50%;
+      background: rgba(56,189,248,0.12);
+      border: 1px solid rgba(56,189,248,0.25);
+      color: var(--acc);
+      font-family: 'Inconsolata', monospace;
+      font-size: 12px; font-weight: 600;
+      display: flex; align-items: center; justify-content: center;
+      flex-shrink: 0; margin-top: 2px;
+    }
+    .step-content { flex: 1; }
+    .step-action {
+      font-weight: 700; font-size: 14px;
+      margin-bottom: 4px;
+    }
+    .step-detail {
+      font-size: 12px; color: var(--muted);
+      font-family: 'Inconsolata', monospace;
+      line-height: 1.55;
+    }
+    .step-ts {
+      font-family: 'Inconsolata', monospace;
+      font-size: 10px; color: #3a5a70;
+      margin-top: 4px;
+    }
+
+    /* ── Status pill ── */
+    .status-pill {
+      font-family: 'Inconsolata', monospace;
+      font-size: 11px;
+      padding: 3px 10px; border-radius: 999px;
+      border: 1px solid var(--line);
+      color: var(--muted);
+    }
+    .status-pill.ok { border-color: rgba(74,222,128,0.3); color: var(--acc3); }
+    .status-pill.busy { border-color: rgba(56,189,248,0.3); color: var(--acc); }
+    .status-pill.fail { border-color: rgba(239,68,68,0.3); color: var(--danger); }
+
+    /* ── Footer ── */
+    footer {
+      position: relative; z-index: 1;
+      text-align: center;
+      padding: 24px;
+      font-family: 'Inconsolata', monospace;
+      font-size: 11px; color: var(--muted);
+      border-top: 1px solid var(--line);
+    }
+    footer a { color: var(--acc); text-decoration: none; }
+
+    /* ── Animations ── */
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(16px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50%       { opacity: 0.3; }
+    }
+
+    /* ── Print / PDF styles ── */
+    @media print {
+      body { background: #fff !important; color: #111 !important; font-family: Georgia, serif; }
+      header, footer, .card:not(.output-card), .no-print { display: none !important; }
+      .output-card { border: none !important; padding: 0 !important; display: block !important; }
+      .pdf-preview {
+        background: #fff !important; border: none !important;
+        max-height: none !important; overflow: visible !important;
+        color: #111 !important;
+      }
+      .pdf-preview h2 { color: #111 !important; }
+      .pdf-preview .meta { color: #555 !important; }
+      .pdf-preview .summary-block {
+        background: #f0f8ff !important;
+        border-left: 3px solid #0ea5e9 !important;
+        color: #0c4a6e !important;
+      }
+      .step-num {
+        background: #e0f2fe !important;
+        border-color: #38bdf8 !important;
+        color: #0369a1 !important;
+      }
+      .step-detail { color: #555 !important; }
+      .step-ts { color: #aaa !important; }
+      .pdf-preview .step-block { border-bottom: 1px solid #e5e7eb !important; }
+      .step-action { color: #111 !important; }
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <div class="logo">
+    <div class="logo-mark">D</div>
+    <span class="logo-text">Daxini Lens</span>
+    <span class="logo-sub">Video → PDF</span>
+  </div>
+  <div class="header-right">
+    BYOK · Zero Server · Vanilla JS
+  </div>
+</header>
+
+<main>
+
+  <!-- Hero -->
+  <div class="hero">
+    <div class="hero-eyebrow">Daxini Creator Studio</div>
+    <h1>Turn any screen recording<br>into a <em>step-by-step guide</em></h1>
+    <p>Upload your video. Gemini reads every frame and action. Download a clean PDF guide — no editing, no manual steps.</p>
+  </div>
+
+  <!-- Step 1: API Key -->
+  <div class="card" style="animation-delay:0.1s">
+    <div class="card-title">01 · Gemini API Key</div>
+    <div class="key-row">
+      <input type="password" id="apiKey" placeholder="AIza..." autocomplete="off" />
+      <button class="btn" id="toggleKey" onclick="toggleKeyVisibility()">Show</button>
+    </div>
+    <p style="margin-top:10px; font-size:11px; color:var(--muted); font-family:'Inconsolata',monospace;">
+      Your key stays in-browser. Never sent anywhere except Google's Gemini API. 
+      <a href="https://aistudio.google.com/app/apikey" target="_blank" style="color:var(--acc);">Get a free key →</a>
+    </p>
+  </div>
+
+  <!-- Step 2: Upload video -->
+  <div class="card no-print" style="animation-delay:0.2s">
+    <div class="card-title">02 · Upload Screen Recording</div>
+    <div class="drop-zone" id="dropZone">
+      <input type="file" id="videoFile" accept="video/mp4,video/webm,video/mov,video/avi,video/quicktime" />
+      <div class="drop-icon">🎬</div>
+      <div class="drop-label">Drop your screen recording here</div>
+      <div class="drop-sub">MP4 · MOV · WEBM · AVI · max ~500MB</div>
+      <div class="drop-selected" id="fileSelected"></div>
+    </div>
+  </div>
+
+  <!-- Step 3: Options -->
+  <div class="card no-print" style="animation-delay:0.3s">
+    <div class="card-title">03 · Guide Options</div>
+    <div class="options-grid">
+      <div>
+        <label class="field-label">Guide Title (optional)</label>
+        <input type="text" id="guideTitle" placeholder="e.g. How to set up LogicHub" />
+      </div>
+      <div>
+        <label class="field-label">Output Detail Level</label>
+        <select id="detailLevel">
+          <option value="concise">Concise — key actions only</option>
+          <option value="detailed" selected>Detailed — every step + context</option>
+          <option value="verbose">Verbose — full narration + tips</option>
+        </select>
+      </div>
+      <div>
+        <label class="field-label">Audience</label>
+        <input type="text" id="audience" placeholder="e.g. non-technical users" />
+      </div>
+      <div>
+        <label class="field-label">Gemini Model</label>
+        <select id="modelSelect">
+          <option value="gemini-1.5-flash">Gemini 1.5 Flash (fast · free)</option>
+          <option value="gemini-1.5-pro" selected>Gemini 1.5 Pro (best quality)</option>
+          <option value="gemini-2.0-flash">Gemini 2.0 Flash (latest)</option>
+        </select>
+      </div>
+    </div>
+    <div class="btn-row">
+      <button class="btn primary" id="generateBtn" onclick="startGeneration()">
+        ⚡ Generate PDF Guide
+      </button>
+      <button class="btn danger-btn" onclick="resetAll()">Reset</button>
+      <span class="status-pill" id="statusPill">idle</span>
+    </div>
+  </div>
+
+  <!-- Progress -->
+  <div class="card no-print" id="progressCard" style="display:none; animation-delay:0s">
+    <div class="card-title">Processing</div>
+    <div class="progress-steps" id="progressSteps">
+      <div class="step-item" id="step-upload">
+        <div class="step-dot"></div>
+        <span>Uploading video to Gemini File API...</span>
+      </div>
+      <div class="step-item" id="step-analyse">
+        <div class="step-dot"></div>
+        <span>Gemini reading frames and actions...</span>
+      </div>
+      <div class="step-item" id="step-structure">
+        <div class="step-dot"></div>
+        <span>Structuring step-by-step guide...</span>
+      </div>
+      <div class="step-item" id="step-render">
+        <div class="step-dot"></div>
+        <span>Rendering PDF preview...</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Output -->
+  <div class="card output-card" id="outputCard" style="display:none; animation-delay:0s">
+    <div class="card-title" style="justify-content:space-between; flex-wrap:wrap; gap:8px;">
+      <span>Generated Guide</span>
+      <div style="display:flex; gap:8px; flex-wrap:wrap;">
+        <button class="btn success" onclick="exportPDF()">⬇ Download PDF</button>
+        <button class="btn" onclick="copyMarkdown()">📋 Copy Markdown</button>
+        <button class="btn" onclick="exportJSON()">📦 Export JSON</button>
+      </div>
+    </div>
+    <div class="pdf-preview" id="pdfPreview"></div>
+  </div>
+
+</main>
+
+<footer>
+  <span>Daxini Lens · Part of <a href="https://daxini.space" target="_blank">Daxini Space</a> · Built by <a href="https://viadecide.com" target="_blank">ViaDecide</a> · Zero npm · Vanilla JS · BYOK</span>
+</footer>
+
+<script>
+(function(){
+
+  // ── State ──────────────────────────────────────────────────────────────
+  let _fileData = null;    // { name, type, base64 }
+  let _guideData = null;   // parsed JSON from Gemini
+  let _busy = false;
+
+  const $ = id => document.getElementById(id);
+
+  // ── Key visibility ─────────────────────────────────────────────────────
+  window.toggleKeyVisibility = function(){
+    const inp = $('apiKey');
+    const btn = $('toggleKey');
+    if(inp.type === 'password'){
+      inp.type = 'text'; btn.textContent = 'Hide';
+    } else {
+      inp.type = 'password'; btn.textContent = 'Show';
+    }
+  };
+
+  // ── File drop handling ─────────────────────────────────────────────────
+  const dropZone = $('dropZone');
+  const fileInput = $('videoFile');
+
+  dropZone.addEventListener('dragover', e => { e.preventDefault(); dropZone.classList.add('over'); });
+  dropZone.addEventListener('dragleave', () => dropZone.classList.remove('over'));
+  dropZone.addEventListener('drop', e => {
+    e.preventDefault();
+    dropZone.classList.remove('over');
+    const file = e.dataTransfer.files[0];
+    if(file) handleFile(file);
+  });
+  fileInput.addEventListener('change', e => {
+    const file = e.target.files[0];
+    if(file) handleFile(file);
+  });
+
+  function handleFile(file){
+    const sel = $('fileSelected');
+    sel.textContent = `✓ ${file.name} (${(file.size/1024/1024).toFixed(1)} MB)`;
+    sel.style.display = 'block';
+
+    const reader = new FileReader();
+    reader.onload = () => {
+      const base64 = reader.result.split(',')[1];
+      _fileData = { name: file.name, type: file.type || 'video/mp4', base64 };
+    };
+    reader.readAsDataURL(file);
+  }
+
+  // ── Status helpers ─────────────────────────────────────────────────────
+  function setStatus(text, type=''){
+    const pill = $('statusPill');
+    pill.textContent = text;
+    pill.className = 'status-pill' + (type ? ' ' + type : '');
+  }
+
+  function setStep(id, state){
+    const el = $(id);
+    el.className = 'step-item ' + state;
+  }
+
+  // ── Main generation pipeline ───────────────────────────────────────────
+  window.startGeneration = async function(){
+    if(_busy) return;
+
+    const key   = $('apiKey').value.trim();
+    const model = $('modelSelect').value;
+    const title = $('guideTitle').value.trim() || 'Screen Recording Guide';
+    const detail= $('detailLevel').value;
+    const audience = $('audience').value.trim() || 'general users';
+
+    if(!key){ alert('Please enter your Gemini API key.'); return; }
+    if(!_fileData){ alert('Please upload a video file first.'); return; }
+
+    _busy = true;
+    $('generateBtn').disabled = true;
+    $('progressCard').style.display = 'block';
+    $('outputCard').style.display = 'none';
+    setStatus('processing...', 'busy');
+
+    // Reset steps
+    ['step-upload','step-analyse','step-structure','step-render'].forEach(s => setStep(s,''));
+
+    try {
+      // ── 1. Upload video to Gemini File API ──────────────────────────
+      setStep('step-upload','active');
+
+      const uploadRes = await fetch(
+        `https://generativelanguage.googleapis.com/upload/v1beta/files?key=${key}`,
+        {
+          method: 'POST',
+          headers: {
+            'X-Goog-Upload-Protocol': 'raw',
+            'X-Goog-Upload-Header-Content-Type': _fileData.type,
+            'Content-Type': _fileData.type,
+          },
+          body: base64ToBlob(_fileData.base64, _fileData.type)
+        }
+      );
+
+      if(!uploadRes.ok){
+        const err = await uploadRes.text();
+        throw new Error(`File upload failed: ${uploadRes.status} — ${err}`);
+      }
+
+      const uploadJson = await uploadRes.json();
+      const fileUri = uploadJson.file?.uri;
+      if(!fileUri) throw new Error('No file URI returned from Gemini File API.');
+
+      setStep('step-upload','done');
+
+      // ── 2. Wait for file to be ACTIVE ───────────────────────────────
+      setStep('step-analyse','active');
+      await waitForFileActive(key, uploadJson.file.name);
+
+      // ── 3. Analyse with Gemini ──────────────────────────────────────
+      const detailInstructions = {
+        concise: 'List only the major actions. Keep descriptions brief (1 sentence max per step).',
+        detailed: 'Document every significant user action with clear description and context.',
+        verbose: 'Provide comprehensive documentation including context, tips, and explanations for each step.'
+      }[detail];
+
+      const prompt = `You are a technical documentation expert. Analyse this screen recording and extract every user action and interaction.
+
+Title of guide: "${title}"
+Target audience: ${audience}
+Detail level: ${detailInstructions}
+
+Respond ONLY with a valid JSON object and nothing else. No markdown, no backticks, no preamble. Exactly this structure:
+
+{
+  "title": "string — guide title",
+  "summary": "string — 2-3 sentence overview of what this recording demonstrates",
+  "duration_estimate": "string — estimated recording length e.g. '1m 45s'",
+  "total_steps": number,
+  "steps": [
+    {
+      "step_number": number,
+      "action": "string — short action title (max 8 words)",
+      "detail": "string — clear description of what is happening",
+      "timestamp": "string — approximate timestamp e.g. '0:12' or 'early/mid/late'",
+      "tip": "string or null — optional tip for the user"
+    }
+  ],
+  "generated_at": "string — ISO timestamp"
+}`;
+
+      const geminiRes = await fetch(
+        `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${key}`,
+        {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            contents: [{
+              parts: [
+                {
+                  file_data: {
+                    mime_type: _fileData.type,
+                    file_uri: fileUri
+                  }
+                },
+                { text: prompt }
+              ]
+            }],
+            generationConfig: {
+              temperature: 0.2,
+              maxOutputTokens: 8192
+            }
+          })
+        }
+      );
+
+      if(!geminiRes.ok){
+        const err = await geminiRes.text();
+        throw new Error(`Gemini API error: ${geminiRes.status} — ${err}`);
+      }
+
+      const geminiJson = await geminiRes.json();
+      const rawText = geminiJson?.candidates?.[0]?.content?.parts?.[0]?.text || '';
+      setStep('step-analyse','done');
+
+      // ── 4. Parse JSON ───────────────────────────────────────────────
+      setStep('step-structure','active');
+
+      let guide;
+      try {
+        const cleaned = rawText.replace(/```json|```/g,'').trim();
+        guide = JSON.parse(cleaned);
+      } catch(e) {
+        throw new Error('Could not parse Gemini response as JSON. Try again or switch to a different model.');
+      }
+
+      guide.generated_at = guide.generated_at || new Date().toISOString();
+      _guideData = guide;
+      setStep('step-structure','done');
+
+      // ── 5. Render ───────────────────────────────────────────────────
+      setStep('step-render','active');
+      renderPreview(guide);
+      setStep('step-render','done');
+
+      $('outputCard').style.display = 'block';
+      $('outputCard').scrollIntoView({ behavior:'smooth', block:'start' });
+      setStatus('guide ready', 'ok');
+
+    } catch(err) {
+      console.error(err);
+      ['step-upload','step-analyse','step-structure','step-render'].forEach(s => {
+        if($(s).classList.contains('active')) setStep(s,'error');
+      });
+      setStatus('error', 'fail');
+      alert('❌ ' + err.message);
+    } finally {
+      _busy = false;
+      $('generateBtn').disabled = false;
+    }
+  };
+
+  // ── Wait for Gemini file to be ACTIVE ────────────────────────────────
+  async function waitForFileActive(key, fileName){
+    const maxWait = 30;
+    for(let i = 0; i < maxWait; i++){
+      const res = await fetch(
+        `https://generativelanguage.googleapis.com/v1beta/${fileName}?key=${key}`
+      );
+      const data = await res.json();
+      if(data?.state === 'ACTIVE') return;
+      if(data?.state === 'FAILED') throw new Error('Gemini file processing failed.');
+      await sleep(2000);
+    }
+    throw new Error('File processing timed out. Try a shorter video or different format.');
+  }
+
+  // ── Render PDF preview ────────────────────────────────────────────────
+  function renderPreview(guide){
+    const wrap = $('pdfPreview');
+    const steps = (guide.steps || []);
+    const genDate = guide.generated_at
+      ? new Date(guide.generated_at).toLocaleString()
+      : new Date().toLocaleString();
+
+    let html = `
+      <h2>${esc(guide.title || 'Screen Recording Guide')}</h2>
+      <div class="meta">
+        Generated: ${genDate}
+        ${guide.duration_estimate ? ` · Duration: ${esc(guide.duration_estimate)}` : ''}
+        · ${steps.length} steps
+        · Powered by Daxini Lens
+      </div>`;
+
+    if(guide.summary){
+      html += `<div class="summary-block">${esc(guide.summary)}</div>`;
+    }
+
+    steps.forEach((s, i) => {
+      html += `
+        <div class="step-block">
+          <div class="step-num">${s.step_number || i+1}</div>
+          <div class="step-content">
+            <div class="step-action">${esc(s.action || '')}</div>
+            <div class="step-detail">${esc(s.detail || '')}</div>
+            ${s.tip ? `<div class="step-detail" style="margin-top:5px; color:#7dd3fc;">💡 ${esc(s.tip)}</div>` : ''}
+            ${s.timestamp ? `<div class="step-ts">⏱ ${esc(s.timestamp)}</div>` : ''}
+          </div>
+        </div>`;
+    });
+
+    wrap.innerHTML = html;
+  }
+
+  // ── Export PDF ────────────────────────────────────────────────────────
+  window.exportPDF = function(){
+    window.print();
+  };
+
+  // ── Copy Markdown ─────────────────────────────────────────────────────
+  window.copyMarkdown = function(){
+    if(!_guideData){ alert('No guide generated yet.'); return; }
+    const g = _guideData;
+    let md = `# ${g.title || 'Guide'}\n\n`;
+    if(g.summary) md += `> ${g.summary}\n\n`;
+    (g.steps || []).forEach(s => {
+      md += `## Step ${s.step_number}: ${s.action}\n`;
+      md += `${s.detail}\n`;
+      if(s.tip) md += `\n> 💡 **Tip:** ${s.tip}\n`;
+      if(s.timestamp) md += `\n*Timestamp: ${s.timestamp}*\n`;
+      md += '\n';
+    });
+    md += `\n---\n*Generated by Daxini Lens · daxini.space*\n`;
+    navigator.clipboard.writeText(md)
+      .then(() => setStatus('markdown copied!','ok'))
+      .catch(() => { alert('Copy failed. Please manually copy.'); });
+  };
+
+  // ── Export JSON ───────────────────────────────────────────────────────
+  window.exportJSON = function(){
+    if(!_guideData){ alert('No guide generated yet.'); return; }
+    const blob = new Blob([JSON.stringify(_guideData, null, 2)], { type:'application/json' });
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = 'daxini-guide.json';
+    a.click();
+    URL.revokeObjectURL(a.href);
+    setStatus('json exported','ok');
+  };
+
+  // ── Reset ─────────────────────────────────────────────────────────────
+  window.resetAll = function(){
+    _fileData = null;
+    _guideData = null;
+    $('videoFile').value = '';
+    $('fileSelected').style.display = 'none';
+    $('progressCard').style.display = 'none';
+    $('outputCard').style.display = 'none';
+    $('pdfPreview').innerHTML = '';
+    $('guideTitle').value = '';
+    ['step-upload','step-analyse','step-structure','step-render'].forEach(s => setStep(s,''));
+    setStatus('idle');
+  };
+
+  // ── Helpers ───────────────────────────────────────────────────────────
+  function base64ToBlob(b64, type){
+    const bin = atob(b64);
+    const arr = new Uint8Array(bin.length);
+    for(let i = 0; i < bin.length; i++) arr[i] = bin.charCodeAt(i);
+    return new Blob([arr], { type });
+  }
+
+  function sleep(ms){ return new Promise(r => setTimeout(r, ms)); }
+
+  function esc(str){
+    return String(str||'')
+      .replace(/&/g,'&amp;')
+      .replace(/</g,'&lt;')
+      .replace(/>/g,'&gt;')
+      .replace(/"/g,'&quot;');
+  }
+
+})();
+</script>
+</body>
+</html>
